@@ -6,20 +6,31 @@ const botoes = document.getElementById("botoes");
 const feedback = document.getElementById("feedback");
 const barra = document.getElementById("nivel-seguranca");
 
+// === ELEMENTOS EXTRAS (ATO 4 HQ) ===
+const senhaBox = document.getElementById("senha-box");
+const inputSenha = document.getElementById("input-senha");
+const btnConfirmarSenha = document.getElementById("confirmar-senha");
+
 // =======================
 // ESTADO DO JOGADOR
 // =======================
 let estadoJogador = {
   seguranca: 0,
-  atoAtual: 1
+  atoAtual: 1,
+  log: [],
+  errosCriticos: []
 };
 
 // =======================
-// FUNÇÕES DE SISTEMA
+// SISTEMA DE SEGURANÇA
 // =======================
 function atualizarBarra() {
   const valor = Math.max(0, Math.min(100, 50 + estadoJogador.seguranca * 10));
   barra.style.width = valor + "%";
+}
+
+function normalizarSeguranca() {
+  estadoJogador.seguranca = Math.max(-10, Math.min(10, estadoJogador.seguranca));
 }
 
 function obterRank(seguranca) {
@@ -34,22 +45,29 @@ function obterRank(seguranca) {
   return "🟦 Cyber Sentinela";
 }
 
-// Penalidade progressiva por ato
+// =======================
+// IMPACTO PROGRESSIVO
+// =======================
 function calcularImpacto(base) {
   if (base >= 0) return base;
   const mult =
     estadoJogador.atoAtual <= 2 ? 1 :
     estadoJogador.atoAtual <= 4 ? 1.4 :
-    estadoJogador.atoAtual <= 6 ? 1.7 :
-    2.2;
+    estadoJogador.atoAtual <= 6 ? 1.7 : 2.2;
   return Math.round(base * mult);
 }
 
-function aplicarImpacto(base) {
-  estadoJogador.seguranca += calcularImpacto(base);
+function aplicarImpacto(base = 0) {
+  const impacto = calcularImpacto(base);
+  estadoJogador.seguranca += impacto;
+  normalizarSeguranca();
   atualizarBarra();
+  return impacto;
 }
 
+// =======================
+// FEEDBACK VISUAL
+// =======================
 function mostrarFeedback(msg, impacto) {
   feedback.textContent = msg || "";
   feedback.className =
@@ -65,20 +83,38 @@ function aplicarGlitchSeErro(impacto) {
   }
 }
 
+// =======================
+// EXECUÇÃO DE ESCOLHAS
+// =======================
 function executarEscolha(opcao) {
-  aplicarImpacto(opcao.impacto);
-  mostrarFeedback(opcao.feedback, opcao.impacto);
-  aplicarGlitchSeErro(opcao.impacto);
+  const impacto = aplicarImpacto(opcao.impacto);
+
+  estadoJogador.log.push({
+    ato: estadoJogador.atoAtual,
+    escolha: opcao.texto,
+    impacto,
+    hora: new Date().toLocaleTimeString()
+  });
+
+  if (impacto <= -4) {
+    estadoJogador.errosCriticos.push({
+      ato: estadoJogador.atoAtual,
+      erro: opcao.texto
+    });
+  }
+
+  mostrarFeedback(opcao.feedback, impacto);
+  aplicarGlitchSeErro(impacto);
 
   setTimeout(() => {
     typeof opcao.proxima === "function"
       ? opcao.proxima()
       : mostrarCena(opcao.proxima);
-  }, 1500);
+  }, 1400);
 }
 
 // =======================
-// TRANSIÇÃO ENTRE ATOS
+// TRANSIÇÃO DE ATOS
 // =======================
 function mostrarTransicaoAto(numeroAto, proximoAto) {
   estadoJogador.atoAtual = numeroAto;
@@ -86,10 +122,11 @@ function mostrarTransicaoAto(numeroAto, proximoAto) {
   texto.innerHTML =
     `<strong>ATO ${numeroAto} DESBLOQUEADO</strong><br><br>` +
     `${obterRank(estadoJogador.seguranca)}<br><br>` +
-    `⚠️ Ataques agora exploram comportamento humano.`;
+    `⚠️ Ataques exploram decisões humanas, não sistemas.`;
 
   botoes.innerHTML = "";
   feedback.textContent = "";
+  senhaBox && senhaBox.classList.add("hidden");
 
   const btn = document.createElement("button");
   btn.textContent = "Continuar";
@@ -105,25 +142,25 @@ function mostrarTransicaoAto(numeroAto, proximoAto) {
 // =======================
 const ATO_1 = {
   inicio: {
-    texto: "O despertador toca, é hora de levantar",
+    texto: "O despertador toca.\nHora de levantar.",
     opcoes: [
-      { texto: "Soneca várias vezes", feedback: "Começo apressado.", impacto: -2, proxima: "cama" },
-      { texto: "Acordo logo", feedback: "Bom começo.", proxima: "cama" },
-      { texto: "Desligo o despertador e levanto", feedback: "Boa, disciplina é tudo!", impacto: +2, proxima: "cama" },
+      { texto: "Soneca várias vezes", impacto: -2, feedback: "Começo apressado.", proxima: "cama" },
+      { texto: "Acordar logo", impacto: 0, feedback: "Rotina estável.", proxima: "cama" },
+      { texto: "Levantar disciplinado", impacto: +2, feedback: "Disciplina ajuda decisões.", proxima: "cama" }
     ]
   },
   cama: {
-    texto: "Hora do café da manhã",
+    texto: "Hora do café da manhã.",
     opcoes: [
-      { texto: "Abrir redes sociais", feedback: "Decisão automática.", impacto: -3, proxima: "fim" },
-      { texto: "Evitar o celular", feedback: "Mais controle.", impacto: +1, proxima: "fim" }
+      { texto: "Abrir redes sociais", impacto: -3, feedback: "Decisão automática.", proxima: "fim" },
+      { texto: "Evitar o celular", impacto: +1, feedback: "Autocontrole.", proxima: "fim" }
     ]
   },
   fim: {
     texto: "Hora de sair.",
     opcoes: [
-      { texto: "Saio no horário", impacto: 0, feedback: "", proxima: () => mostrarTransicaoAto(2, ATO_2) },
-       { texto: "Me atraso mexendo em rede social", impacto: -1, feedback: "Atraso detectado.", proxima: () => mostrarTransicaoAto(2, ATO_2) }
+      { texto: "Sair no horário", impacto: 0, feedback: "", proxima: () => mostrarTransicaoAto(2, ATO_2) },
+      { texto: "Atrasar por redes sociais", impacto: -1, feedback: "Atraso detectado.", proxima: () => mostrarTransicaoAto(2, ATO_2) }
     ]
   }
 };
@@ -135,21 +172,21 @@ const ATO_2 = {
   inicio: {
     texto: "Você anda e o celular vibra.",
     opcoes: [
-      { texto: "Olhar andando", feedback: "Distração.", impacto: -1, proxima: "mensagem" },
-      { texto: "Esperar parar", feedback: "Boa decisão.", impacto: +1, proxima: "mensagem" },
-      { texto: "Zero ele no bolso", feedback: "Perpicaz, eu diria.", impacto: +2, proxima: "mensagem" }
+      { texto: "Olhar andando", impacto: -1, feedback: "Distração.", proxima: "mensagem" },
+      { texto: "Parar para olhar", impacto: +1, feedback: "Boa decisão.", proxima: "mensagem" },
+      { texto: "Ignorar no bolso", impacto: +2, feedback: "Autocontrole.", proxima: "mensagem" }
     ]
   },
   mensagem: {
     texto: "Mensagem urgente pede ação imediata.",
     opcoes: [
-      { texto: "Clicar no link", feedback: "Urgência é armadilha.", impacto: -2, proxima: "fim" },
-      { texto: "Ignorar", feedback: "Boa leitura.", impacto: +1, proxima: "fim" },
-      { texto: "Recusar/fechar", feedback: "Maravilha.", impacto: +2, proxima: "fim" }
+      { texto: "Clicar no link", impacto: -2, feedback: "Urgência é armadilha.", proxima: "fim" },
+      { texto: "Ignorar", impacto: +1, feedback: "Boa leitura.", proxima: "fim" },
+      { texto: "Fechar a mensagem", impacto: +2, feedback: "Excelente.", proxima: "fim" }
     ]
   },
   fim: {
-    texto: "Você chega ao trabalho",
+    texto: "Você chega ao trabalho.",
     opcoes: [
       { texto: "Entrar", impacto: 0, feedback: "", proxima: () => mostrarTransicaoAto(3, ATO_3) }
     ]
@@ -161,38 +198,38 @@ const ATO_2 = {
 // =======================
 const ATO_3 = {
   inicio: {
-    texto: "Chega um e-mail do DP da empresa marcado como URGENTE.",
+    texto: "Chega um e-mail do DP marcado como URGENTE.",
     opcoes: [
-      { texto: "Abrir imediatamente", feedback: "Urgência pressiona.", impacto: -1, proxima: "conteudo" },
-      { texto: "Ler com calma", feedback: "Boa postura.", impacto: +1, proxima: "conteudo" }
+      { texto: "Abrir imediatamente", impacto: -1, feedback: "Urgência pressiona.", proxima: "conteudo" },
+      { texto: "Ler com calma", impacto: +1, feedback: "Boa postura.", proxima: "conteudo" }
     ]
   },
   conteudo: {
-    texto: "“Todos devem baixar o memorando antes das 9h.”",
+    texto: "Todos devem baixar o memorando antes das 9h.",
     opcoes: [
-      { texto: "Confiar por ser interno", feedback: "Confiança cega.", impacto: -1, proxima: "arquivo" },
-      { texto: "Estranhar o tom", feedback: "Bom sinal.", impacto: +1, proxima: "arquivo" }
+      { texto: "Confiar por ser interno", impacto: -1, feedback: "Confiança cega.", proxima: "arquivo" },
+      { texto: "Estranhar o tom", impacto: +1, feedback: "Bom sinal.", proxima: "arquivo" }
     ]
   },
   arquivo: {
     texto: "Anexo: memorando.pdf.exe",
     opcoes: [
-      { texto: "Baixar", feedback: "Extensão dupla é golpe.", impacto: -3, proxima: "fim" },
-      { texto: "Não baixar", feedback: "Você evitou o ataque.", impacto: +2, proxima: "fim" }
+      { texto: "Baixar o arquivo", impacto: -3, feedback: "Extensão dupla é golpe.", proxima: "fim" },
+      { texto: "Não baixar", impacto: +2, feedback: "Você evitou o ataque.", proxima: "fim" }
     ]
   },
   fim: {
     texto: "A TI confirma: tentativa de phishing.",
     opcoes: [
-      { texto: "Não sinalizar o TI que você baixou o arquivo", impacto: -5, feedback: "Péssimo.", proxima: () => mostrarTransicaoAto(4, ATO_4) },
-      { texto: "Sinalizar o TI que você baixou o arquivo", impacto: 0, feedback: "", proxima: () => mostrarTransicaoAto(4, ATO_4) },
-      { texto: "Sinalizar o TI que não você baixou o arquivo", impacto: +3, feedback: "Muito bem.", proxima: () => mostrarTransicaoAto(4, ATO_4) }      
+      { texto: "Não avisar a TI", impacto: -5, feedback: "Péssimo.", proxima: () => mostrarTransicaoAto(4, ATO_4) },
+      { texto: "Avisar a TI que baixou", impacto: 0, feedback: "Correto.", proxima: () => mostrarTransicaoAto(4, ATO_4) },
+      { texto: "Avisar a TI que NÃO baixou", impacto: +3, feedback: "Muito bem.", proxima: () => mostrarTransicaoAto(4, ATO_4) }
     ]
   }
 };
 
 // =======================
-// ATO 4 – SENHAS
+// ATO 4 – SENHAS (CORRIGIDO)
 // =======================
 let colaboradorAtual = 1;
 
@@ -222,18 +259,34 @@ const ATO_4 = {
       impacto: 0,
       feedback: "",
       proxima: () => {
-        const senha = prompt("Digite a senha:");
-        const r = analisarSenha(senha);
-        aplicarImpacto(r.impacto);
-        mostrarFeedback(r.msg, r.impacto);
-        colaboradorAtual++;
-        setTimeout(() => colaboradorAtual <= 4 ? mostrarCena("senha") : mostrarCena("fim"), 1500);
+        senhaBox.classList.remove("hidden");
+        btnConfirmarSenha.onclick = () => {
+          const r = analisarSenha(inputSenha.value);
+          aplicarImpacto(r.impacto);
+          mostrarFeedback(r.msg, r.impacto);
+          inputSenha.value = "";
+          senhaBox.classList.add("hidden");
+          colaboradorAtual++;
+          setTimeout(() => {
+            colaboradorAtual <= 4 ? mostrarCena("senha") : mostrarCena("fim");
+          }, 1400);
+        };
       }
     }]
   },
   fim: {
-    texto: "Senhas criadas. Os usuários irão alterá-las.",
-    opcoes: [{ texto: "Continuar", impacto: 0, feedback: "", proxima: () => mostrarTransicaoAto(5, ATO_5) }]
+    texto: "Senhas criadas.\nOs usuários irão alterá-las.",
+    opcoes: [{
+      texto: "Continuar",
+      impacto: 0,
+      feedback: "",
+      proxima: () => {
+        colaboradorAtual = 1;
+        senhaBox.classList.add("hidden");
+        inputSenha.value = "";
+        mostrarTransicaoAto(5, ATO_5);
+      }
+    }]
   }
 };
 
@@ -244,9 +297,9 @@ const ATO_5 = {
   inicio: {
     texto: "O expediente segue.\nHora do almoço.",
     opcoes: [
-        { texto: "Ir almoçar no restaurante ou comer marmita", impacto: +2, feedback: "Você tenta espairecer.", proxima: () => mostrarTransicaoAto(6, ATO_6) },
-        { texto: "Comer algo rápido na rua", impacto: 0, feedback: "Sem muito tempo para pensar.", proxima: () => mostrarTransicaoAto(6, ATO_6) },
-        { texto: "Pular o almoço e continuar trabalhando", impacto: -5, feedback: "O cansaço começa a pesar.", proxima: () => mostrarTransicaoAto(6, ATO_6) }
+      { texto: "Almoçar com calma", impacto: +2, feedback: "Você espairece.", proxima: () => mostrarTransicaoAto(6, ATO_6) },
+      { texto: "Comer algo rápido", impacto: 0, feedback: "Sem pausa mental.", proxima: () => mostrarTransicaoAto(6, ATO_6) },
+      { texto: "Pular o almoço", impacto: -5, feedback: "Cansaço afeta decisões.", proxima: () => mostrarTransicaoAto(6, ATO_6) }
     ]
   }
 };
@@ -258,29 +311,29 @@ const ATO_6 = {
   inicio: {
     texto: "Durante o almoço, o celular fica sobre a mesa.",
     opcoes: [
-      { texto: "Virar o celular", feedback: "Menos exposição.", impacto: +1, proxima: "anuncios" },
-      { texto: "Deixar desbloqueado", feedback: "Exposição desnecessária.", impacto: -2, proxima: "anuncios" }
+      { texto: "Virar o celular", impacto: +1, feedback: "Menos exposição.", proxima: "anuncios" },
+      { texto: "Deixar desbloqueado", impacto: -4, feedback: "Exposição desnecessária.", proxima: "anuncios" }
     ]
   },
   anuncios: {
     texto: "Após falar de macarrão, surgem anúncios de comida italiana.",
     opcoes: [
-      { texto: "Ignorar", feedback: "Boa leitura.", impacto: +1, proxima: "oferta" },
-      { texto: "Clicar por curiosidade", feedback: "Curiosidade explorada.", impacto: -1, proxima: "oferta" }
+      { texto: "Ignorar", impacto: +1, feedback: "Boa leitura.", proxima: "oferta" },
+      { texto: "Clicar por curiosidade", impacto: -1, feedback: "Curiosidade explorada.", proxima: "oferta" }
     ]
   },
   oferta: {
     texto: "Promoção relâmpago de restaurante italiano.",
     opcoes: [
-      { texto: "Clicar rápido", feedback: "Urgência é armadilha.", impacto: -2, proxima: "reserva" },
-      { texto: "Pesquisar fora do anúncio", feedback: "Boa prática.", impacto: +2, proxima: "fimSeguro" }
+      { texto: "Clicar rápido", impacto: -2, feedback: "Urgência é armadilha.", proxima: "reserva" },
+      { texto: "Pesquisar fora do anúncio", impacto: +2, feedback: "Boa prática.", proxima: "fimSeguro" }
     ]
   },
   reserva: {
     texto: "O site pede login para confirmar a reserva.",
     opcoes: [
-      { texto: "Inserir credenciais", feedback: "Credenciais roubadas.", impacto: -5, proxima: "fim" },
-      { texto: "Sair do site", feedback: "Boa decisão.", impacto: +2, proxima: "fimSeguro" }
+      { texto: "Inserir credenciais", impacto: -5, feedback: "Credenciais roubadas.", proxima: "fim" },
+      { texto: "Sair do site", impacto: +2, feedback: "Boa decisão.", proxima: "fimSeguro" }
     ]
   },
   fimSeguro: {
@@ -300,8 +353,8 @@ const ATO_7 = {
   inicio: {
     texto: "Mensagem no WhatsApp corporativo pede acesso urgente.",
     opcoes: [
-      { texto: "Enviar acesso", feedback: "Confiança explorada.", impacto: -4, proxima: "fim" },
-      { texto: "Confirmar por ligação", feedback: "Verificação salvou você.", impacto: +3, proxima: "fim" }
+      { texto: "Enviar acesso", impacto: -4, feedback: "Confiança explorada.", proxima: "fim" },
+      { texto: "Confirmar por ligação", impacto: +3, feedback: "Verificação salvou você.", proxima: "fim" }
     ]
   },
   fim: {
@@ -317,8 +370,8 @@ const ATO_8 = {
   inicio: {
     texto: "QR Code no prédio oferece Wi-Fi.",
     opcoes: [
-      { texto: "Escanear", feedback: "QRs podem esconder golpes.", impacto: -2, proxima: "fim" },
-      { texto: "Ignorar", feedback: "Boa prática.", impacto: +2, proxima: "fim" }
+      { texto: "Escanear", impacto: -2, feedback: "QRs escondem golpes.", proxima: "fim" },
+      { texto: "Ignorar", impacto: +2, feedback: "Boa prática.", proxima: "fim" }
     ]
   },
   fim: {
@@ -334,8 +387,8 @@ const ATO_9 = {
   inicio: {
     texto: "Você encontra um pendrive no estacionamento.",
     opcoes: [
-      { texto: "Conectar no PC para ver o que tem nele", feedback: "Curiosidade explorada.", impacto: -5, proxima: "fim" },
-      { texto: "Entregar à TI", feedback: "Procedimento correto.", impacto: +3, proxima: "fim" }
+      { texto: "Conectar no PC", impacto: -5, feedback: "Curiosidade explorada.", proxima: "fim" },
+      { texto: "Entregar à TI", impacto: +3, feedback: "Procedimento correto.", proxima: "fim" }
     ]
   },
   fim: {
@@ -345,16 +398,15 @@ const ATO_9 = {
 };
 
 // =======================
-// ATO 10 – COLAPSO IMEDIATO
+// ATO 10 – COLAPSO FINAL
 // =======================
 function iniciarCaosImediato() {
   document.body.classList.add("caos-total");
 
-  let impacto;
-  if (estadoJogador.seguranca <= -4) impacto = -7;
-  else if (estadoJogador.seguranca <= -2) impacto = -4;
-  else if (estadoJogador.seguranca <= 1) impacto = -2;
-  else impacto = 0;
+  let impacto =
+    estadoJogador.seguranca <= -4 ? -7 :
+    estadoJogador.seguranca <= -2 ? -4 :
+    estadoJogador.seguranca <= 1 ? -2 : 0;
 
   aplicarImpacto(impacto);
 
@@ -363,22 +415,26 @@ function iniciarCaosImediato() {
   }, 3000);
 }
 
+function gerarResumoFinal() {
+  if (estadoJogador.errosCriticos.length >= 3)
+    return "Você não foi atacado por sistemas.<br>Foi atacado por padrões repetidos.";
+
+  if (estadoJogador.seguranca >= 5)
+    return "Você reconhece armadilhas antes que elas apareçam.";
+
+  return "A segurança depende da próxima decisão.";
+}
+
 const ATO_10 = {
   inicio: {
     texto: () => {
       iniciarCaosImediato();
-
-      if (estadoJogador.seguranca <= -4)
-        return "⚠️ ALERTA CRÍTICO\n\nAcessos não autorizados.\nSistemas instáveis.";
-      if (estadoJogador.seguranca <= -2)
-        return "⚠️ ALERTA\n\nAtividades suspeitas detectadas.";
-      if (estadoJogador.seguranca <= 1)
-        return "⚠️ AVISO\n\nComportamentos inseguros registrados.";
+      if (estadoJogador.seguranca <= -4) return "⚠️ ALERTA CRÍTICO\nSistemas comprometidos.";
+      if (estadoJogador.seguranca <= -2) return "⚠️ ALERTA\nAtividades suspeitas.";
+      if (estadoJogador.seguranca <= 1) return "⚠️ AVISO\nComportamentos inseguros.";
       return "Expediente encerrado.\nNenhum incidente crítico.";
     },
-    opcoes: [
-      { texto: "Ver status final", impacto: 0, feedback: "", proxima: "fim" }
-    ]
+    opcoes: [{ texto: "Ver status final", impacto: 0, feedback: "", proxima: "fim" }]
   },
   fim: {
     texto: () =>
@@ -386,7 +442,7 @@ const ATO_10 = {
       "Status final:\n" +
       obterRank(estadoJogador.seguranca) +
       "\n\n" +
-      "Ataques não exploram sistemas.\nEles exploram as suas decisões.",
+      gerarResumoFinal(),
     opcoes: []
   }
 };
@@ -400,7 +456,11 @@ function mostrarCena(nomeCena) {
   const cena = cenasAtuais[nomeCena];
   if (!cena) return;
 
-  texto.textContent = typeof cena.texto === "function" ? cena.texto() : cena.texto;
+  senhaBox && senhaBox.classList.add("hidden");
+
+  const conteudo = typeof cena.texto === "function" ? cena.texto() : cena.texto;
+  texto.innerHTML = conteudo.replace(/\n/g, "<br>");
+
   botoes.innerHTML = "";
   feedback.textContent = "";
 
@@ -413,7 +473,7 @@ function mostrarCena(nomeCena) {
 }
 
 // =======================
-// INÍCIO
+// INÍCIO DO JOGO
 // =======================
 atualizarBarra();
 mostrarCena("inicio");
