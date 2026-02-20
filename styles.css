@@ -1,0 +1,241 @@
+/* RESET */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* FUNDO CYBER */
+body {
+  font-family: "Segoe UI", system-ui, sans-serif;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top, #111827, #020617 70%),
+    repeating-linear-gradient(
+      90deg,
+      rgba(250, 204, 21, 0.03) 0px,
+      rgba(250, 204, 21, 0.03) 1px,
+      transparent 1px,
+      transparent 4px
+    );
+  color: #e5e7eb;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* CONTAINER DO GAME */
+main {
+  width: 100%;
+  max-width: 420px;
+  padding: 26px 22px;
+  background: rgba(2, 6, 23, 0.9);
+  border-radius: 18px;
+  border: 1px solid rgba(250, 204, 21, 0.2);
+  box-shadow:
+    0 0 25px rgba(250, 204, 21, 0.15),
+    inset 0 0 20px rgba(250, 204, 21, 0.05);
+  animation: fadeIn 0.6s ease;
+}
+
+/* TÍTULO */
+h1 {
+  text-align: center;
+  font-size: 1.4rem;
+  margin-bottom: 20px;
+  color: #facc15;
+  text-shadow:
+    0 0 6px rgba(250, 204, 21, 0.8),
+    0 0 14px rgba(250, 204, 21, 0.4);
+}
+
+/* TEXTO DA CENA */
+#texto {
+  text-align: center;
+  font-size: 1rem;
+  line-height: 1.65;
+  margin-bottom: 22px;
+  color: #f8fafc;
+  animation: fadeUp 0.4s ease;
+}
+
+/* ÁREA DE BOTÕES */
+#botoes {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* BOTÕES CYBER */
+button {
+  padding: 14px 18px;
+  border-radius: 12px;
+  border: 1px solid rgba(250, 204, 21, 0.35);
+  background: linear-gradient(
+    135deg,
+    rgba(250, 204, 21, 0.12),
+    rgba(250, 204, 21, 0.04)
+  );
+  color: #facc15;
+  font-size: 0.95rem;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    background 0.2s ease;
+}
+
+/* HOVER */
+button:hover {
+  box-shadow:
+    0 0 10px rgba(250, 204, 21, 0.6),
+    0 0 25px rgba(250, 204, 21, 0.3);
+  background: linear-gradient(
+    135deg,
+    rgba(250, 204, 21, 0.25),
+    rgba(250, 204, 21, 0.1)
+  );
+}
+
+/* CLICK */
+button:active {
+  transform: scale(0.96);
+}
+
+/* FEEDBACK */
+#feedback {
+  margin-top: 14px;
+  font-size: 0.9rem;
+  text-align: center;
+  color: #fde047;
+  text-shadow: 0 0 8px rgba(250, 204, 21, 0.6);
+  min-height: 1.2em;
+  animation: fadeIn 0.3s ease;
+}
+
+/* ANIMAÇÕES */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* DESKTOP */
+@media (min-width: 768px) {
+  main {
+    max-width: 520px;
+    padding: 32px 28px;
+  }
+
+  h1 {
+    font-size: 1.6rem;
+  }
+
+  #texto {
+    font-size: 1.05rem;
+  }
+}
+/* === FEEDBACK POR IMPACTO === */
+.feedback-positivo {
+  color: #22c55e;
+  text-shadow: 0 0 10px rgba(34, 197, 94, 0.9);
+}
+
+.feedback-negativo {
+  color: #ef4444;
+  text-shadow: 0 0 10px rgba(239, 68, 68, 0.9);
+}
+
+.feedback-neutro {
+  color: #fde047;
+}
+
+/* === GLITCH === */
+.glitch {
+  animation: glitch 0.25s linear;
+}
+
+@keyframes glitch {
+  0% { transform: translate(0); }
+  20% { transform: translate(-2px, 1px); }
+  40% { transform: translate(2px, -1px); }
+  60% { transform: translate(-1px, 2px); }
+  80% { transform: translate(1px, -2px); }
+  100% { transform: translate(0); }
+}
+
+/* === BARRA DE SEGURANÇA === */
+#barra-seguranca {
+  width: 100%;
+  height: 10px;
+  background: rgba(250, 204, 21, 0.2);
+  border-radius: 10px;
+  margin-bottom: 18px;
+  overflow: hidden;
+}
+
+#nivel-seguranca {
+  height: 100%;
+  width: 50%;
+  background: linear-gradient(90deg, #ef4444, #facc15, #22c55e);
+  box-shadow: 0 0 12px rgba(250, 204, 21, 0.9);
+  transition: width 0.4s ease;
+}
+
+/* === TRANSIÇÃO DE ATO === */
+.ato-titulo {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #facc15;
+  text-shadow: 0 0 10px rgba(250, 204, 21, 0.8);
+}
+
+.ato-rank {
+  font-size: 1.05rem;
+  color: #e5e7eb;
+  text-shadow: 0 0 8px rgba(34, 197, 94, 0.6);
+}
+
+.ato-alerta {
+  font-size: 0.95rem;
+  color: #ef4444;
+  text-shadow: 0 0 10px rgba(239, 68, 68, 0.7);
+}
+/* === CAOS IMEDIATO === */
+.caos-total {
+  animation: caosTotal 0.12s infinite;
+}
+
+@keyframes caosTotal {
+  0% { transform: translate(0); }
+  20% { transform: translate(-4px, 3px); }
+  40% { transform: translate(4px, -3px); }
+  60% { transform: translate(-3px, -4px); }
+  80% { transform: translate(3px, 4px); }
+  100% { transform: translate(0); }
+}
+
+/* TEXTO DE ALERTA */
+.alerta-critico {
+  color: #ef4444;
+  text-shadow:
+    0 0 12px rgba(239, 68, 68, 0.9),
+    0 0 24px rgba(239, 68, 68, 0.6);
+}
