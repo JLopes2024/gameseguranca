@@ -105,23 +105,25 @@ function mostrarTransicaoAto(numeroAto, proximoAto) {
 // =======================
 const ATO_1 = {
   inicio: {
-    texto: "O despertador toca.",
+    texto: "O despertador toca, é hora de levantar",
     opcoes: [
-      { texto: "Soneca várias vezes", feedback: "Começo apressado.", impacto: -1, proxima: "cama" },
-      { texto: "Levantar logo", feedback: "Bom começo.", impacto: +1, proxima: "cama" }
+      { texto: "Soneca várias vezes", feedback: "Começo apressado.", impacto: -2, proxima: "cama" },
+      { texto: "Acordo logo", feedback: "Bom começo.", proxima: "cama" },
+      { texto: "Desligo o despertador e levanto", feedback: "Boa, disciplina é tudo!", impacto: +2, proxima: "cama" },
     ]
   },
   cama: {
-    texto: "Ainda na cama, você pega o celular.",
+    texto: "Hora do café da manhã",
     opcoes: [
-      { texto: "Abrir redes sociais", feedback: "Decisão automática.", impacto: -1, proxima: "fim" },
+      { texto: "Abrir redes sociais", feedback: "Decisão automática.", impacto: -3, proxima: "fim" },
       { texto: "Evitar o celular", feedback: "Mais controle.", impacto: +1, proxima: "fim" }
     ]
   },
   fim: {
     texto: "Hora de sair.",
     opcoes: [
-      { texto: "Continuar", impacto: 0, feedback: "", proxima: () => mostrarTransicaoAto(2, ATO_2) }
+      { texto: "Saio no horário", impacto: 0, feedback: "", proxima: () => mostrarTransicaoAto(2, ATO_2) },
+       { texto: "Me atraso mexendo em rede social", impacto: -1, feedback: "Atraso detectado.", proxima: () => mostrarTransicaoAto(2, ATO_2) }
     ]
   }
 };
@@ -134,18 +136,20 @@ const ATO_2 = {
     texto: "Você anda e o celular vibra.",
     opcoes: [
       { texto: "Olhar andando", feedback: "Distração.", impacto: -1, proxima: "mensagem" },
-      { texto: "Esperar parar", feedback: "Boa decisão.", impacto: +1, proxima: "mensagem" }
+      { texto: "Esperar parar", feedback: "Boa decisão.", impacto: +1, proxima: "mensagem" },
+      { texto: "Zero ele no bolso", feedback: "Perpicaz, eu diria.", impacto: +2, proxima: "mensagem" }
     ]
   },
   mensagem: {
     texto: "Mensagem urgente pede ação imediata.",
     opcoes: [
       { texto: "Clicar no link", feedback: "Urgência é armadilha.", impacto: -2, proxima: "fim" },
-      { texto: "Ignorar", feedback: "Boa leitura.", impacto: +1, proxima: "fim" }
+      { texto: "Ignorar", feedback: "Boa leitura.", impacto: +1, proxima: "fim" },
+      { texto: "Recusar/fechar", feedback: "Maravilha.", impacto: +2, proxima: "fim" }
     ]
   },
   fim: {
-    texto: "Você chega ao trabalho.",
+    texto: "Você chega ao trabalho",
     opcoes: [
       { texto: "Entrar", impacto: 0, feedback: "", proxima: () => mostrarTransicaoAto(3, ATO_3) }
     ]
@@ -157,7 +161,7 @@ const ATO_2 = {
 // =======================
 const ATO_3 = {
   inicio: {
-    texto: "Chega um e-mail interno marcado como URGENTE.",
+    texto: "Chega um e-mail do DP da empresa marcado como URGENTE.",
     opcoes: [
       { texto: "Abrir imediatamente", feedback: "Urgência pressiona.", impacto: -1, proxima: "conteudo" },
       { texto: "Ler com calma", feedback: "Boa postura.", impacto: +1, proxima: "conteudo" }
@@ -180,7 +184,9 @@ const ATO_3 = {
   fim: {
     texto: "A TI confirma: tentativa de phishing.",
     opcoes: [
-      { texto: "Continuar", impacto: 0, feedback: "", proxima: () => mostrarTransicaoAto(4, ATO_4) }
+      { texto: "Não sinalizar o TI que você baixou o arquivo", impacto: -5, feedback: "Péssimo.", proxima: () => mostrarTransicaoAto(4, ATO_4) },
+      { texto: "Sinalizar o TI que você baixou o arquivo", impacto: 0, feedback: "", proxima: () => mostrarTransicaoAto(4, ATO_4) },
+      { texto: "Sinalizar o TI que não você baixou o arquivo", impacto: +3, feedback: "Muito bem.", proxima: () => mostrarTransicaoAto(4, ATO_4) }      
     ]
   }
 };
@@ -237,7 +243,11 @@ const ATO_4 = {
 const ATO_5 = {
   inicio: {
     texto: "O expediente segue.\nHora do almoço.",
-    opcoes: [{ texto: "Ir almoçar", impacto: 0, feedback: "", proxima: () => mostrarTransicaoAto(6, ATO_6) }]
+    opcoes: [
+        { texto: "Ir almoçar no restaurante ou comer marmita", impacto: +2, feedback: "Você tenta espairecer.", proxima: () => mostrarTransicaoAto(6, ATO_6) },
+        { texto: "Comer algo rápido na rua", impacto: 0, feedback: "Sem muito tempo para pensar.", proxima: () => mostrarTransicaoAto(6, ATO_6) },
+        { texto: "Pular o almoço e continuar trabalhando", impacto: -5, feedback: "O cansaço começa a pesar.", proxima: () => mostrarTransicaoAto(6, ATO_6) }
+    ]
   }
 };
 
@@ -249,7 +259,7 @@ const ATO_6 = {
     texto: "Durante o almoço, o celular fica sobre a mesa.",
     opcoes: [
       { texto: "Virar o celular", feedback: "Menos exposição.", impacto: +1, proxima: "anuncios" },
-      { texto: "Deixar desbloqueado", feedback: "Exposição desnecessária.", impacto: -1, proxima: "anuncios" }
+      { texto: "Deixar desbloqueado", feedback: "Exposição desnecessária.", impacto: -2, proxima: "anuncios" }
     ]
   },
   anuncios: {
@@ -307,7 +317,7 @@ const ATO_8 = {
   inicio: {
     texto: "QR Code no prédio oferece Wi-Fi.",
     opcoes: [
-      { texto: "Escanear", feedback: "QR pode esconder golpes.", impacto: -2, proxima: "fim" },
+      { texto: "Escanear", feedback: "QRs podem esconder golpes.", impacto: -2, proxima: "fim" },
       { texto: "Ignorar", feedback: "Boa prática.", impacto: +2, proxima: "fim" }
     ]
   },
@@ -324,7 +334,7 @@ const ATO_9 = {
   inicio: {
     texto: "Você encontra um pendrive no estacionamento.",
     opcoes: [
-      { texto: "Conectar no PC", feedback: "Curiosidade explorada.", impacto: -5, proxima: "fim" },
+      { texto: "Conectar no PC para ver o que tem nele", feedback: "Curiosidade explorada.", impacto: -5, proxima: "fim" },
       { texto: "Entregar à TI", feedback: "Procedimento correto.", impacto: +3, proxima: "fim" }
     ]
   },
@@ -376,7 +386,7 @@ const ATO_10 = {
       "Status final:\n" +
       obterRank(estadoJogador.seguranca) +
       "\n\n" +
-      "Ataques não exploram sistemas.\nExploram decisões.",
+      "Ataques não exploram sistemas.\nEles exploram as suas decisões.",
     opcoes: []
   }
 };
