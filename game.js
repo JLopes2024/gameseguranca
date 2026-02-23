@@ -84,6 +84,39 @@ function aplicarGlitchSeErro(impacto) {
 }
 
 // =======================
+// CONTADOR DE URGÊNCIA
+// =======================
+let contadorIntervalo = null;
+
+function iniciarContador(segundos, onTimeout) {
+  let tempo = segundos;
+  atualizarTextoContador(tempo);
+
+  contadorIntervalo = setInterval(() => {
+    tempo--;
+    atualizarTextoContador(tempo);
+
+    if (tempo <= 0) {
+      clearInterval(contadorIntervalo);
+      contadorIntervalo = null;
+      onTimeout && onTimeout();
+    }
+  }, 1000);
+}
+
+function pararContador() {
+  if (contadorIntervalo) {
+    clearInterval(contadorIntervalo);
+    contadorIntervalo = null;
+  }
+}
+
+function atualizarTextoContador(tempo) {
+  feedback.textContent = `⏱️ Tempo restante: ${tempo}s`;
+  feedback.className = "feedback-negativo";
+}
+
+// =======================
 // EXECUÇÃO DE ESCOLHAS
 // =======================
 function executarEscolha(opcao) {
@@ -177,71 +210,164 @@ const ATO_2 = {
       { texto: "Ignorar no bolso", impacto: +2, feedback: "Autocontrole.", proxima: "mensagem" }
     ]
   },
+
   mensagem: {
-    texto: "Mensagem urgente pede ação imediata.",
+    texto: "Mensagem diz: 'Sua conta será bloqueada em 2 minutos'.",
     opcoes: [
-      { texto: "Clicar no link", impacto: -2, feedback: "Urgência é armadilha.", proxima: "fim" },
-      { texto: "Ignorar", impacto: +1, feedback: "Boa leitura.", proxima: "fim" },
-      { texto: "Fechar a mensagem", impacto: +2, feedback: "Excelente.", proxima: "fim" }
+      { texto: "Abrir o aviso", impacto: -1, feedback: "Urgência criada.", proxima: "site" },
+      { texto: "Ignorar mensagem", impacto: +2, feedback: "Você evitou a pressão.", proxima: "fim" }
     ]
   },
+
+  site: {
+    texto: () => {
+      iniciarContador(6, () => {
+        executarEscolha({
+          texto: "Tempo esgotado",
+          impacto: -3,
+          feedback: "A pressa te prejudicou.",
+          proxima: "fim"
+        });
+      });
+      return "Um colaborador te pede ajuda com o banco financeiro dele";
+    },
+    opcoes: [
+      {
+        texto: "seguranca-banco.com-verificacao",
+        impacto: -4,
+        feedback: "Domínio falso com palavras-chave.",
+        proxima: () => { pararContador(); mostrarCena("fim"); }
+      },
+      {
+        texto: "banco.com.br",
+        impacto: +3,
+        feedback: "Domínio legítimo.",
+        proxima: () => { pararContador(); mostrarCena("fim"); }
+      },
+      {
+        texto: "banco-seguro!.net",
+        impacto: -3,
+        feedback: "Extensão suspeita.",
+        proxima: () => { pararContador(); mostrarCena("fim"); }
+      }
+    ]
+  },
+
   fim: {
-    texto: "Você chega ao trabalho.",
+    texto: "Você segue caminho para o trabalho.",
     opcoes: [
       { texto: "Entrar", impacto: 0, feedback: "", proxima: () => mostrarTransicaoAto(3, ATO_3) }
     ]
   }
 };
+// =======================
+// ATO 3 – MEMORANDO (LÓGICA REALISTA)
+// =======================
 
-// =======================
-// ATO 3 – MEMORANDO
-// =======================
+// 🔎 CONTROLE DE DOWNLOAD DO MEMORANDO
+let memorandoBaixado = false;
+
 const ATO_3 = {
   inicio: {
     texto: "Chega um e-mail do DP marcado como URGENTE.",
     opcoes: [
-      { texto: "Abrir imediatamente", impacto: -1, feedback: "Urgência pressiona.", proxima: "conteudo" },
-      { texto: "Ler com calma", impacto: +1, feedback: "Boa postura.", proxima: "conteudo" }
+      {
+        texto: "Abrir imediatamente",
+        impacto: -1,
+        feedback: "Urgência pressiona.",
+        proxima: "conteudo"
+      },
+      {
+        texto: "Ler com calma",
+        impacto: +1,
+        feedback: "Boa postura.",
+        proxima: "conteudo"
+      }
     ]
   },
+
   conteudo: {
     texto: "Todos devem baixar o memorando antes das 9h.",
     opcoes: [
-      { texto: "Confiar por ser interno", impacto: -1, feedback: "Confiança cega.", proxima: "arquivo" },
-      { texto: "Estranhar o tom", impacto: +1, feedback: "Bom sinal.", proxima: "arquivo" }
+      {
+        texto: "Confiar por ser interno",
+        impacto: -1,
+        feedback: "Confiança cega.",
+        proxima: "arquivo"
+      },
+      {
+        texto: "Estranhar o tom",
+        impacto: +1,
+        feedback: "Bom sinal.",
+        proxima: "arquivo"
+      }
     ]
   },
+
   arquivo: {
     texto: "Anexo: memorando.pdf.exe",
     opcoes: [
-      { texto: "Baixar o arquivo", impacto: -3, feedback: "Extensão dupla é golpe.", proxima: "fim" },
-      { texto: "Não baixar", impacto: +2, feedback: "Você evitou o ataque.", proxima: "fim" }
+      {
+        texto: "Baixar o arquivo",
+        impacto: -3,
+        feedback: "Extensão dupla é golpe.",
+        proxima: () => {
+          memorandoBaixado = true; // 🚨 REGISTRO REAL
+          mostrarCena("fim");
+        }
+      },
+      {
+        texto: "Não baixar",
+        impacto: +2,
+        feedback: "Você evitou o ataque.",
+        proxima: "fim"
+      }
     ]
   },
+
   fim: {
     texto: "A TI confirma: tentativa de phishing.",
     opcoes: [
-      { texto: "Não avisar a TI", impacto: -5, feedback: "Péssimo.", proxima: () => mostrarTransicaoAto(4, ATO_4) },
-      { texto: "Avisar a TI que baixou", impacto: 0, feedback: "Correto.", proxima: () => mostrarTransicaoAto(4, ATO_4) },
-      { texto: "Avisar a TI que NÃO baixou", impacto: +3, feedback: "Muito bem.", proxima: () => mostrarTransicaoAto(4, ATO_4) }
+      {
+        texto: "Não avisar a TI sobre o ocorrido",
+        impacto: -5,
+        feedback: "O incidente foi ocultado.",
+        proxima: () => mostrarTransicaoAto(4, ATO_4)
+      },
+      {
+        texto: "Avisar a TI sobre o ocorrido",
+        impacto: 0,
+        feedback: "Resposta correta.",
+        proxima: () => mostrarTransicaoAto(4, ATO_4),
+        condicao: () => memorandoBaixado
+      }
     ]
   }
 };
+// =======================
+// ATO 4 – SENHAS (COM RASTRO DE VAZAMENTO)
+// =======================
 
 // =======================
-// ATO 4 – SENHAS (CORRIGIDO)
+// CONTROLE DE SENHAS FRACAS E VAZAMENTO
 // =======================
+let senhasFracasCriadas = 0;
+let senhasVazadas = [];
 let colaboradorAtual = 1;
 
 function analisarSenha(senha) {
   let pontos = 0;
-  if (!senha || senha.length < 6) return { impacto: -4, msg: "Senha muito curta." };
+
+  if (!senha || senha.length < 6)
+    return { impacto: -4, msg: "Senha muito curta." };
+
   if (senha.length >= 8 && senha.length <= 12) pontos += 2;
   if (senha.length > 12) pontos -= 1;
   if (/[a-z]/.test(senha)) pontos++;
   if (/[A-Z]/.test(senha)) pontos++;
   if (/[0-9]/.test(senha)) pontos++;
   if (/[^a-zA-Z0-9]/.test(senha)) pontos++;
+
   if (pontos >= 5) return { impacto: +3, msg: "Senha forte." };
   if (pontos >= 3) return { impacto: 0, msg: "Senha aceitável." };
   return { impacto: -2, msg: "Senha fraca." };
@@ -250,46 +376,89 @@ function analisarSenha(senha) {
 const ATO_4 = {
   inicio: {
     texto: "Chegaram novos colaboradores.\nCrie senhas temporárias.",
-    opcoes: [{ texto: "Iniciar", impacto: 0, feedback: "", proxima: "senha" }]
+    opcoes: [
+      {
+        texto: "Iniciar",
+        impacto: 0,
+        feedback: "",
+        proxima: "senha"
+      }
+    ]
   },
+
   senha: {
     texto: () => `Colaborador ${colaboradorAtual}/4\nCrie uma senha segura.`,
-    opcoes: [{
-      texto: "Criar senha",
-      impacto: 0,
-      feedback: "",
-      proxima: () => {
-        senhaBox.classList.remove("hidden");
-        btnConfirmarSenha.onclick = () => {
-          const r = analisarSenha(inputSenha.value);
-          aplicarImpacto(r.impacto);
-          mostrarFeedback(r.msg, r.impacto);
-          inputSenha.value = "";
-          senhaBox.classList.add("hidden");
-          colaboradorAtual++;
-          setTimeout(() => {
-            colaboradorAtual <= 4 ? mostrarCena("senha") : mostrarCena("fim");
-          }, 1400);
-        };
+    opcoes: [
+      {
+        texto: "Criar senha",
+        impacto: 0,
+        feedback: "",
+        proxima: () => {
+          senhaBox.classList.remove("hidden");
+
+          btnConfirmarSenha.onclick = () => {
+            const senhaDigitada = inputSenha.value;
+            const r = analisarSenha(senhaDigitada);
+
+            aplicarImpacto(r.impacto);
+            mostrarFeedback(r.msg, r.impacto);
+
+            // 🚨 REGISTRO DE SENHA FRACA PARA VAZAMENTO FUTURO
+            if (r.impacto < 0) {
+              senhasFracasCriadas++;
+              senhasVazadas.push({
+                colaborador: colaboradorAtual,
+                nivel: r.msg,
+                horario: new Date().toLocaleTimeString()
+              });
+            }
+
+            inputSenha.value = "";
+            senhaBox.classList.add("hidden");
+            colaboradorAtual++;
+
+            setTimeout(() => {
+              colaboradorAtual <= 4
+                ? mostrarCena("senha")
+                : mostrarCena("fim");
+            }, 1400);
+          };
+        }
       }
-    }]
+    ]
   },
+
   fim: {
-    texto: "Senhas criadas.\nOs usuários irão alterá-las.",
-    opcoes: [{
-      texto: "Continuar",
-      impacto: 0,
-      feedback: "",
-      proxima: () => {
-        colaboradorAtual = 1;
-        senhaBox.classList.add("hidden");
-        inputSenha.value = "";
-        mostrarTransicaoAto(5, ATO_5);
+    texto: () => {
+      if (senhasFracasCriadas === 0) {
+        return (
+          "Senhas criadas com sucesso.\n\n" +
+          "Nenhuma fragilidade detectada.\n" +
+          "As contas estão protegidas."
+        );
       }
-    }]
+
+      return (
+        "Senhas criadas.\n\n" +
+        "⚠️ Algumas senhas apresentam fragilidade.\n" +
+        "Isso poderá gerar consequências durante o expediente."
+      );
+    },
+    opcoes: [
+      {
+        texto: "Continuar",
+        impacto: 0,
+        feedback: "",
+        proxima: () => {
+          colaboradorAtual = 1;
+          senhaBox.classList.add("hidden");
+          inputSenha.value = "";
+          mostrarTransicaoAto(5, ATO_5);
+        }
+      }
+    ]
   }
 };
-
 // =======================
 // ATO 5 – PRÉ-ALMOÇO
 // =======================
@@ -323,10 +492,33 @@ const ATO_6 = {
     ]
   },
   oferta: {
-    texto: "Promoção relâmpago de restaurante italiano.",
+  texto: "Promoção relâmpago de restaurante italiano.",
+  opcoes: [
+    { texto: "Clicar rápido", impacto: -2, feedback: "Urgência é armadilha.", proxima: "carteira" },
+    { texto: "Pesquisar fora do anúncio", impacto: +2, feedback: "Boa prática.", proxima: "fimSeguro" }
+  ]
+},
+    carteira: {
+    texto: "Anúncio oferece cashback se você confirmar sua carteira digital.",
     opcoes: [
-      { texto: "Clicar rápido", impacto: -2, feedback: "Urgência é armadilha.", proxima: "reserva" },
-      { texto: "Pesquisar fora do anúncio", impacto: +2, feedback: "Boa prática.", proxima: "fimSeguro" }
+      {
+        texto: "Fazer login rapidamente",
+        impacto: -5,
+        feedback: "Página clonada roubou suas credenciais.",
+        proxima: "fim"
+      },
+      {
+        texto: "Verificar app oficial",
+        impacto: +3,
+        feedback: "Cashback falso evitado.",
+        proxima: "fimSeguro"
+      },
+      {
+        texto: "Ignorar oferta",
+        impacto: +2,
+        feedback: "Boa decisão.",
+        proxima: "fimSeguro"
+      }
     ]
   },
   reserva: {
@@ -345,6 +537,214 @@ const ATO_6 = {
     opcoes: [{ texto: "Seguir", impacto: 0, feedback: "", proxima: () => mostrarTransicaoAto(7, ATO_7) }]
   }
 };
+
+proxima: () => {
+  cenasAtuais = ATO_ROUBO_DADOS;
+  mostrarCena("inicio");
+}
+
+// =======================
+// CONTROLE DE CADASTRO DE CLIENTES
+// =======================
+let clientesCadastrados = [];
+// =======================
+// ATO SURPRESA – ROUBO DO BANCO DE DADOS DO CLIENTE
+// =======================
+const ATO_ROUBO_DADOS = {
+  inicio: {
+    texto: () => {
+      estadoJogador.atoAtual = 8.5;
+
+      return (
+        "🗂️ NOVO CADASTRO DE CLIENTE<br><br>" +
+        "Um cliente está sendo criado no sistema pela primeira vez.<br><br>" +
+        "Nome, CPF e senha serão registrados agora.<br><br>" +
+        "⚠️ Essa senha será usada diretamente pelo cliente."
+      );
+    },
+    opcoes: [
+      {
+        texto: "Cadastrar cliente",
+        impacto: 0,
+        feedback: "",
+        proxima: "senhaCliente"
+      }
+    ]
+  },
+
+  senhaCliente: {
+    texto: () =>
+      "Defina a senha do cliente.<br><br>" +
+      "🔐 Essa senha não é temporária.",
+    opcoes: [
+      {
+        texto: "Criar senha",
+        impacto: 0,
+        feedback: "",
+        proxima: () => {
+          senhaBox.classList.remove("hidden");
+
+          btnConfirmarSenha.onclick = () => {
+            const senha = inputSenha.value;
+            const r = analisarSenha(senha);
+
+            aplicarImpacto(r.impacto);
+            mostrarFeedback(r.msg, r.impacto);
+
+            clientesCadastrados.push({
+              senhaNivel: r.msg,
+              horario: new Date().toLocaleTimeString()
+            });
+
+            inputSenha.value = "";
+            senhaBox.classList.add("hidden");
+
+            setTimeout(() => mostrarCena("ataque"), 1400);
+          };
+        }
+      }
+    ]
+  },
+
+  ataque: {
+    texto: () => {
+      const cliente = clientesCadastrados.at(-1);
+
+      // 🔥 CAOS VISUAL SEMPRE
+      document.body.classList.add("caos-total");
+      texto.classList.add("glitch");
+
+      setTimeout(() => {
+        document.body.classList.remove("caos-total");
+        texto.classList.remove("glitch");
+      }, 4000);
+
+      // 🛡️ SENHA FORTE SEGURA
+      if (cliente.senhaNivel === "Senha forte.") {
+        aplicarImpacto(+2);
+
+        return (
+          "🛡️ FIREWALL CORPORATIVO ATIVADO<br><br>" +
+          "Tentativas de acesso automatizadas foram bloqueadas.<br><br>" +
+          "A senha criada resistiu ao ataque.<br><br>" +
+          "<strong>O banco de dados não foi comprometido.</strong>"
+        );
+      }
+
+      // ⚠️ SENHA ACEITÁVEL
+      if (cliente.senhaNivel === "Senha aceitável.") {
+        aplicarImpacto(-3);
+
+        return (
+          "⚠️ INCIDENTE PARCIAL DETECTADO<br><br>" +
+          "A senha resistiu parcialmente, mas padrões previsíveis foram explorados.<br><br>" +
+          "Metadados do cliente vazaram.<br><br>" +
+          "<strong>Nome e CPF comprometidos.</strong>"
+        );
+      }
+
+      // 🚨 SENHA FRACA
+      aplicarImpacto(-6);
+      estadoJogador.errosCriticos.push({
+        ato: "Roubo de Dados",
+        erro: "Senha fraca em cadastro inicial"
+      });
+
+      return (
+        "🚨 ROUBO DO BANCO DE DADOS 🚨<br><br>" +
+        "Atacantes exploraram a senha criada no cadastro.<br><br>" +
+        "<strong>Dados comprometidos:</strong><br>" +
+        "• Nome<br>• CPF<br>• Senha<br><br>" +
+        "⚠️ O ataque não quebrou sistemas.<br>" +
+        "<strong>Quebrou padrões humanos.</strong>"
+      );
+    },
+    opcoes: [
+      {
+        texto: "Seguir expediente",
+        impacto: 0,
+        feedback: "",
+        proxima: () => mostrarTransicaoAto(9, ATO_9)
+      }
+    ]
+  }
+};
+
+// =======================
+// ATO EXTRA – VAZAMENTO INTERNO DE SENHAS
+// =======================
+const ATO_VAZAMENTO = {
+  inicio: {
+    texto: () => {
+      estadoJogador.atoAtual = 6.5;
+
+      // ✅ Nenhuma senha fraca → quase-incidente
+      if (senhasFracasCriadas === 0) {
+        return (
+          "🛡️ MONITORAMENTO DE SEGURANÇA<br><br>" +
+          "Tentativas automatizadas de acesso foram detectadas.<br><br>" +
+          "Nenhuma credencial criada por você foi explorável.<br><br>" +
+          "<strong>Boas práticas evitaram o incidente.</strong>"
+        );
+      }
+
+      // 💥 CAOS VISUAL
+      document.body.classList.add("caos-total");
+      texto.classList.add("glitch");
+
+      setTimeout(() => {
+        document.body.classList.remove("caos-total");
+        texto.classList.remove("glitch");
+      }, 3500);
+
+      const lista = senhasVazadas.map(v =>
+        `• Colaborador ${v.colaborador} — ${v.nivel} (${v.horario})`
+      ).join("<br>");
+
+      return (
+        "🚨 <strong>INCIDENTE DE SEGURANÇA DETECTADO</strong> 🚨<br><br>" +
+        "Credenciais internas começaram a circular na rede corporativa.<br><br>" +
+        "<strong>Registros comprometidos:</strong><br><br>" +
+        lista +
+        "<br><br>" +
+        "⚠️ O ataque não explorou sistemas.<br>" +
+        "<strong>Explorou decisões.</strong>"
+      );
+    },
+
+    opcoes: () => {
+      // ✅ Caso seguro
+      if (senhasFracasCriadas === 0) {
+        return [{
+          texto: "Seguir expediente",
+          impacto: +2,
+          feedback: "Nenhuma falha explorável encontrada.",
+          proxima: () => mostrarTransicaoAto(7, ATO_7)
+        }];
+      }
+
+      // 🚨 Caso com vazamento
+      return [
+        {
+          texto: "Isolar contas e acionar a TI",
+          impacto: +1,
+          feedback: "Resposta correta, mas o dano inicial já ocorreu.",
+          proxima: () => mostrarTransicaoAto(7, ATO_7)
+        },
+        {
+          texto: "Ignorar o alerta",
+          impacto: -6,
+          feedback: "O vazamento se espalhou pela rede.",
+          proxima: () => mostrarTransicaoAto(7, ATO_7)
+        }
+      ];
+    }
+  }
+};
+// =======================
+// ATO EXTRA – VAZAMENTO DE SENHAS INTERNAS
+// =======================
+// =======================
 
 // =======================
 // ATO 7 – WHATSAPP
@@ -425,25 +825,103 @@ function gerarResumoFinal() {
   return "A segurança depende da próxima decisão.";
 }
 
+// =======================
+// ATO FINAL – ROUBO DE DADOS (EXPLORAÇÃO DE SENHAS)
+// =======================
+function calcularImpactoVazamento() {
+  let impacto = 0;
+
+  senhasVazadas.forEach(v => {
+    if (v.nivel === "Senha aceitável.") impacto -= 2;
+    if (v.nivel === "Senha fraca." || v.nivel === "Senha muito curta.") impacto -= 4;
+  });
+
+  return impacto;
+}
+
+function gerarResumoVazamento() {
+  if (senhasFracasCriadas === 0) {
+    return (
+      "🛡️ FIREWALL CORPORATIVO ATIVADO<br><br>" +
+      "Tentativas de invasão foram detectadas.<br>" +
+      "Todas as credenciais resistiram aos ataques.<br><br>" +
+      "<strong>Motivo:</strong> senhas fortes e bem estruturadas."
+    );
+  }
+
+  const lista = senhasVazadas.map(v =>
+    `• Colaborador ${v.colaborador} — ${v.nivel} (${v.horario})`
+  ).join("<br>");
+
+  return (
+    "🚨 ROUBO DE DADOS CONFIRMADO 🚨<br><br>" +
+    "Atacantes exploraram credenciais frágeis criadas anteriormente.<br><br>" +
+    "<strong>Credenciais exploradas:</strong><br><br>" +
+    lista +
+    "<br><br>" +
+    "⚠️ O ataque não quebrou sistemas.<br>" +
+    "Quebrou padrões."
+  );
+}
+
 const ATO_10 = {
   inicio: {
     texto: () => {
-      iniciarCaosImediato();
-      if (estadoJogador.seguranca <= -4) return "⚠️ ALERTA CRÍTICO\nSistemas comprometidos.";
-      if (estadoJogador.seguranca <= -2) return "⚠️ ALERTA\nAtividades suspeitas.";
-      if (estadoJogador.seguranca <= 1) return "⚠️ AVISO\nComportamentos inseguros.";
-      return "Expediente encerrado.\nNenhum incidente crítico.";
+      estadoJogador.atoAtual = 10;
+
+      // 💥 CAOS VISUAL SE HOUVE SENHA FRACA
+      if (senhasFracasCriadas > 0) {
+        document.body.classList.add("caos-total");
+        texto.classList.add("glitch");
+
+        setTimeout(() => {
+          document.body.classList.remove("caos-total");
+          texto.classList.remove("glitch");
+        }, 4000);
+      }
+
+      const impacto = calcularImpactoVazamento();
+      if (impacto !== 0) aplicarImpacto(impacto);
+
+      return gerarResumoVazamento();
     },
-    opcoes: [{ texto: "Ver status final", impacto: 0, feedback: "", proxima: "fim" }]
+
+    opcoes: [
+      {
+        texto: "📊 Ver impacto final",
+        impacto: 0,
+        feedback: "",
+        proxima: "fim"
+      }
+    ]
   },
+
   fim: {
-    texto: () =>
-      "EXPEDIENTE ENCERRADO\n\n" +
-      "Status final:\n" +
-      obterRank(estadoJogador.seguranca) +
-      "\n\n" +
-      gerarResumoFinal(),
-    opcoes: []
+    texto: () => {
+      let status = obterRank(estadoJogador.seguranca);
+
+      let leitura =
+        senhasFracasCriadas === 0
+          ? "Você construiu defesas antes do ataque existir."
+          : "As consequências surgiram horas depois das decisões.";
+
+      return (
+        "EXPEDIENTE ENCERRADO<br><br>" +
+        "<strong>Status Final:</strong><br>" +
+        status +
+        "<br><br>" +
+        leitura
+      );
+    },
+
+    opcoes: [
+      {
+        texto: "📊 Abrir relatório completo",
+        impacto: 0,
+        feedback: "",
+        proxima: () => mostrarRelatorioFinal()
+      }
+    ]
   }
 };
 
@@ -453,6 +931,8 @@ const ATO_10 = {
 let cenasAtuais = ATO_1;
 
 function mostrarCena(nomeCena) {
+  pararContador(); // 🔒 evita contador fantasma
+
   const cena = cenasAtuais[nomeCena];
   if (!cena) return;
 
