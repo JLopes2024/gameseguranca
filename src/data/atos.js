@@ -1,0 +1,722 @@
+export const ATOS = {
+  1: {
+    titulo: 'Manhã',
+
+    cenas: {
+      inicio: {
+        texto: 'O despertador toca.\nHora de levantar.',
+
+        opcoes: [
+          {
+            texto: 'Soneca várias vezes',
+            impacto: -2,
+            feedback: 'Começo apressado.',
+            proxima: 'cama',
+          },
+          {
+            texto: 'Acordar logo',
+            impacto: 0,
+            feedback: 'Rotina estável.',
+            proxima: 'cama',
+          },
+          {
+            texto: 'Levantar disciplinado',
+            impacto: 2,
+            feedback: 'Disciplina ajuda decisões.',
+            proxima: 'cama',
+          },
+        ],
+      },
+
+      cama: {
+        texto: 'Hora do café da manhã.',
+
+        opcoes: [
+          {
+            texto: 'Abrir redes sociais',
+            impacto: -3,
+            feedback: 'Decisão automática.',
+            proxima: 'fim',
+          },
+          {
+            texto: 'Evitar o celular',
+            impacto: 1,
+            feedback: 'Autocontrole.',
+            proxima: 'fim',
+          },
+        ],
+      },
+
+      fim: {
+        texto: 'Hora de sair.',
+
+        opcoes: [
+          {
+            texto: 'Sair no horário',
+            impacto: 0,
+            feedback: '',
+            proximoAto: 2,
+          },
+          {
+            texto: 'Atrasar por redes sociais',
+            impacto: -1,
+            feedback: 'Atraso detectado.',
+            proximoAto: 2,
+          },
+        ],
+      },
+    },
+  },
+
+  2: {
+    titulo: 'Caminho',
+
+    cenas: {
+      inicio: {
+        texto: 'Você anda e o celular vibra.',
+
+        opcoes: [
+          {
+            texto: 'Olhar andando',
+            impacto: -1,
+            feedback: 'Distração.',
+            proxima: 'mensagem',
+          },
+          {
+            texto: 'Parar para olhar',
+            impacto: 1,
+            feedback: 'Boa decisão.',
+            proxima: 'mensagem',
+          },
+          {
+            texto: 'Ignorar no bolso',
+            impacto: 2,
+            feedback: 'Autocontrole.',
+            proxima: 'mensagem',
+          },
+        ],
+      },
+
+      mensagem: {
+        texto: "Mensagem diz: 'Sua conta será bloqueada em 2 minutos'.",
+
+        opcoes: [
+          {
+            texto: 'Abrir o aviso',
+            impacto: -1,
+            feedback: 'Urgência criada.',
+            proxima: 'site',
+          },
+          {
+            texto: 'Ignorar mensagem',
+            impacto: 2,
+            feedback: 'Você evitou a pressão.',
+            proxima: 'fim',
+          },
+        ],
+      },
+
+      site: {
+        texto:
+          'Um colaborador pede ajuda para identificar o endereço correto do banco.',
+
+        contador: 6,
+
+        timeout: {
+          texto: 'Tempo esgotado',
+          impacto: -3,
+          feedback: 'A pressa te prejudicou.',
+          proxima: 'fim',
+        },
+
+        opcoes: [
+          {
+            texto: 'seguranca-banco.com-verificacao',
+            impacto: -4,
+            feedback: 'Domínio falso com palavras-chave.',
+            proxima: 'fim',
+          },
+          {
+            texto: 'banco.com.br',
+            impacto: 3,
+            feedback: 'Domínio legítimo.',
+            proxima: 'fim',
+          },
+          {
+            texto: 'banco-seguro!.net',
+            impacto: -3,
+            feedback: 'Endereço suspeito.',
+            proxima: 'fim',
+          },
+        ],
+      },
+
+      fim: {
+        texto: 'Você segue caminho para o trabalho.',
+
+        opcoes: [
+          {
+            texto: 'Entrar',
+            impacto: 0,
+            feedback: '',
+            proximoAto: 3,
+          },
+        ],
+      },
+    },
+  },
+
+  3: {
+    titulo: 'Memorando',
+
+    cenas: {
+      inicio: {
+        texto: 'Chega um e-mail do DP marcado como URGENTE.',
+
+        opcoes: [
+          {
+            texto: 'Abrir imediatamente',
+            impacto: -1,
+            feedback: 'Urgência pressiona.',
+            proxima: 'conteudo',
+          },
+          {
+            texto: 'Ler com calma',
+            impacto: 1,
+            feedback: 'Boa postura.',
+            proxima: 'conteudo',
+          },
+        ],
+      },
+
+      conteudo: {
+        texto: 'Todos devem baixar o memorando antes das 9h.',
+
+        opcoes: [
+          {
+            texto: 'Confiar por ser interno',
+            impacto: -1,
+            feedback: 'Confiança cega.',
+            proxima: 'arquivo',
+          },
+          {
+            texto: 'Estranhar o tom',
+            impacto: 1,
+            feedback: 'Bom sinal.',
+            proxima: 'arquivo',
+          },
+        ],
+      },
+
+      arquivo: {
+        texto: 'Anexo: memorando.pdf.exe',
+
+        opcoes: [
+          {
+            texto: 'Baixar o arquivo',
+            impacto: -3,
+            feedback: 'Extensão dupla é um sinal de risco.',
+            acao: 'baixarMemorando',
+            proxima: 'fim',
+          },
+          {
+            texto: 'Não baixar',
+            impacto: 2,
+            feedback: 'Você evitou o ataque.',
+            proxima: 'fim',
+          },
+        ],
+      },
+
+      fim: {
+        texto: 'A TI confirma: tentativa de phishing.',
+
+        opcoes: [
+          {
+            texto: 'Avisar a TI sobre o download',
+            impacto: 0,
+            feedback: 'Resposta correta.',
+            condicao: 'memorandoBaixado',
+            proximoAto: 4,
+          },
+          {
+            texto: 'Ocultar que baixou o arquivo',
+            impacto: -5,
+            feedback: 'O incidente foi ocultado.',
+            condicao: 'memorandoBaixado',
+            proximoAto: 4,
+          },
+          {
+            texto: 'Reportar a tentativa de phishing',
+            impacto: 1,
+            feedback: 'O alerta pode proteger outros colaboradores.',
+            condicao: 'memorandoNaoBaixado',
+            proximoAto: 4,
+          },
+          {
+            texto: 'Seguir sem reportar',
+            impacto: -1,
+            feedback: 'Outras pessoas ainda podem receber o golpe.',
+            condicao: 'memorandoNaoBaixado',
+            proximoAto: 4,
+          },
+        ],
+      },
+    },
+  },
+
+  4: {
+    titulo: 'Senhas',
+
+    cenas: {
+      inicio: {
+        texto:
+          'Chegaram novos colaboradores.\nCrie senhas temporárias.',
+
+        opcoes: [
+          {
+            texto: 'Iniciar',
+            impacto: 0,
+            feedback: '',
+            proxima: 'senha',
+          },
+        ],
+      },
+
+      senha: {
+        tipo: 'senha-colaborador',
+
+        opcoes: [
+          {
+            texto: 'Criar senha',
+            impacto: 0,
+            feedback: '',
+            acao: 'abrirSenhaColaborador',
+          },
+        ],
+      },
+
+      fim: {
+        tipo: 'resumo-senhas',
+
+        opcoes: [
+          {
+            texto: 'Continuar',
+            impacto: 0,
+            feedback: '',
+            proximoAto: 5,
+          },
+        ],
+      },
+    },
+  },
+
+  5: {
+    titulo: 'Pré-almoço',
+
+    cenas: {
+      inicio: {
+        texto:
+          'O expediente segue.\nHora do almoço.',
+
+        opcoes: [
+          {
+            texto: 'Almoçar com calma',
+            impacto: 2,
+            feedback: 'Você espairece.',
+            proximoAto: 6,
+          },
+          {
+            texto: 'Comer algo rápido',
+            impacto: 0,
+            feedback: 'Sem pausa mental.',
+            proximoAto: 6,
+          },
+          {
+            texto: 'Pular o almoço',
+            impacto: -5,
+            feedback: 'Cansaço afeta decisões.',
+            proximoAto: 6,
+          },
+        ],
+      },
+    },
+  },
+
+  6: {
+    titulo: 'Almoço conectado',
+
+    cenas: {
+      inicio: {
+        texto:
+          'Durante o almoço, o celular fica sobre a mesa.',
+
+        opcoes: [
+          {
+            texto: 'Virar o celular',
+            impacto: 1,
+            feedback: 'Menos exposição.',
+            proxima: 'anuncios',
+          },
+          {
+            texto: 'Deixar desbloqueado',
+            impacto: -4,
+            feedback: 'Exposição desnecessária.',
+            proxima: 'anuncios',
+          },
+        ],
+      },
+
+      anuncios: {
+        texto:
+          'Após falar de macarrão, surgem anúncios de comida italiana.',
+
+        opcoes: [
+          {
+            texto: 'Ignorar',
+            impacto: 1,
+            feedback: 'Boa leitura.',
+            proxima: 'oferta',
+          },
+          {
+            texto: 'Clicar por curiosidade',
+            impacto: -1,
+            feedback: 'Curiosidade explorada.',
+            proxima: 'oferta',
+          },
+        ],
+      },
+
+      oferta: {
+        texto:
+          'Promoção relâmpago de restaurante italiano.',
+
+        opcoes: [
+          {
+            texto: 'Clicar rápido',
+            impacto: -2,
+            feedback: 'Urgência é armadilha.',
+            proxima: 'carteira',
+          },
+          {
+            texto: 'Pesquisar fora do anúncio',
+            impacto: 2,
+            feedback: 'Boa prática.',
+            proxima: 'fimSeguro',
+          },
+        ],
+      },
+
+      carteira: {
+        texto:
+          'O anúncio oferece cashback se você confirmar sua carteira digital.',
+
+        opcoes: [
+          {
+            texto: 'Fazer login rapidamente',
+            impacto: -5,
+            feedback:
+              'Página clonada roubou suas credenciais.',
+            proxima: 'fim',
+          },
+          {
+            texto: 'Verificar app oficial',
+            impacto: 3,
+            feedback: 'Cashback falso evitado.',
+            proxima: 'fimSeguro',
+          },
+          {
+            texto: 'Ignorar oferta',
+            impacto: 2,
+            feedback: 'Boa decisão.',
+            proxima: 'fimSeguro',
+          },
+        ],
+      },
+
+      reserva: {
+        texto:
+          'O site pede login para confirmar a reserva.',
+
+        opcoes: [
+          {
+            texto: 'Inserir credenciais',
+            impacto: -5,
+            feedback: 'Credenciais roubadas.',
+            proxima: 'fim',
+          },
+          {
+            texto: 'Sair do site',
+            impacto: 2,
+            feedback: 'Boa decisão.',
+            proxima: 'fimSeguro',
+          },
+        ],
+      },
+
+      fimSeguro: {
+        texto: 'O almoço termina sem incidentes.',
+
+        opcoes: [
+          {
+            texto: 'Continuar',
+            impacto: 0,
+            feedback: '',
+            proxima: 'fim',
+          },
+        ],
+      },
+
+      fim: {
+        texto: 'O expediente continua.',
+
+        opcoes: [
+          {
+            texto: 'Seguir',
+            impacto: 0,
+            feedback: '',
+            proximoAto: 6.5,
+          },
+        ],
+      },
+    },
+  },
+
+  6.5: {
+    titulo: 'Incidente interno',
+
+    cenas: {
+      inicio: {
+        tipo: 'vazamento-interno',
+        efeitoEntrada: 'vazamento-interno',
+
+        opcoes: [
+          {
+            texto: 'Seguir expediente',
+            impacto: 2,
+            feedback:
+              'Nenhuma falha explorável encontrada.',
+            condicao: 'semSenhasFracas',
+            proximoAto: 7,
+          },
+          {
+            texto: 'Isolar contas e acionar a TI',
+            impacto: 1,
+            feedback:
+              'Resposta correta, mas o dano inicial já ocorreu.',
+            condicao: 'comSenhasFracas',
+            proximoAto: 7,
+          },
+          {
+            texto: 'Ignorar o alerta',
+            impacto: -6,
+            feedback:
+              'O vazamento se espalhou pela rede.',
+            condicao: 'comSenhasFracas',
+            proximoAto: 7,
+          },
+        ],
+      },
+    },
+  },
+
+  7: {
+    titulo: 'Engenharia social',
+
+    cenas: {
+      inicio: {
+        texto:
+          'Mensagem no WhatsApp corporativo pede acesso urgente.',
+
+        opcoes: [
+          {
+            texto: 'Enviar acesso',
+            impacto: -4,
+            feedback: 'Confiança explorada.',
+            proxima: 'fim',
+          },
+          {
+            texto: 'Confirmar por ligação',
+            impacto: 3,
+            feedback: 'Verificação salvou você.',
+            proxima: 'fim',
+          },
+        ],
+      },
+
+      fim: {
+        texto:
+          'Engenharia social explora confiança, contexto e urgência.',
+
+        opcoes: [
+          {
+            texto: 'Avançar',
+            impacto: 0,
+            feedback: '',
+            proximoAto: 8,
+          },
+        ],
+      },
+    },
+  },
+
+  8: {
+    titulo: 'QR Code',
+
+    cenas: {
+      inicio: {
+        texto:
+          'QR Code no prédio oferece acesso ao Wi-Fi.',
+
+        opcoes: [
+          {
+            texto: 'Escanear',
+            impacto: -2,
+            feedback:
+              'QR Codes podem esconder o endereço de destino.',
+            proxima: 'fim',
+          },
+          {
+            texto: 'Ignorar',
+            impacto: 2,
+            feedback: 'Boa prática.',
+            proxima: 'fim',
+          },
+        ],
+      },
+
+      fim: {
+        texto:
+          'O expediente segue. Surge uma nova tarefa no sistema.',
+
+        opcoes: [
+          {
+            texto: 'Abrir cadastro de cliente',
+            impacto: 0,
+            feedback: '',
+            proximoAto: 8.5,
+          },
+        ],
+      },
+    },
+  },
+
+  8.5: {
+    titulo: 'Cadastro de cliente',
+
+    cenas: {
+      inicio: {
+        texto:
+          'Um cliente está sendo criado no sistema pela primeira vez.\n\nA senha definida agora será usada diretamente pelo cliente.',
+
+        opcoes: [
+          {
+            texto: 'Cadastrar cliente',
+            impacto: 0,
+            feedback: '',
+            proxima: 'senhaCliente',
+          },
+        ],
+      },
+
+      senhaCliente: {
+        tipo: 'senha-cliente',
+
+        opcoes: [
+          {
+            texto: 'Criar senha',
+            impacto: 0,
+            feedback: '',
+            acao: 'abrirSenhaCliente',
+          },
+        ],
+      },
+
+      ataque: {
+        tipo: 'ataque-cliente',
+        efeitoEntrada: 'ataque-cliente',
+
+        opcoes: [
+          {
+            texto: 'Seguir expediente',
+            impacto: 0,
+            feedback: '',
+            proximoAto: 9,
+          },
+        ],
+      },
+    },
+  },
+
+  9: {
+    titulo: 'Pendrive',
+
+    cenas: {
+      inicio: {
+        texto:
+          'Você encontra um pendrive no estacionamento.',
+
+        opcoes: [
+          {
+            texto: 'Conectar no PC',
+            impacto: -5,
+            feedback: 'Curiosidade explorada.',
+            proxima: 'fim',
+          },
+          {
+            texto: 'Entregar à TI',
+            impacto: 3,
+            feedback: 'Procedimento correto.',
+            proxima: 'fim',
+          },
+        ],
+      },
+
+      fim: {
+        texto: 'Encerrando expediente...',
+
+        opcoes: [
+          {
+            texto: 'Sair',
+            impacto: 0,
+            feedback: '',
+            proximoAto: 10,
+          },
+        ],
+      },
+    },
+  },
+
+  10: {
+    titulo: 'Impacto final',
+
+    cenas: {
+      inicio: {
+        tipo: 'resumo-vazamento',
+        efeitoEntrada: 'impacto-final',
+
+        opcoes: [
+          {
+            texto: 'Ver impacto final',
+            impacto: 0,
+            feedback: '',
+            proxima: 'fim',
+          },
+        ],
+      },
+
+      fim: {
+        tipo: 'status-final',
+
+        opcoes: [
+          {
+            texto: 'Abrir relatório completo',
+            impacto: 0,
+            feedback: '',
+            acao: 'abrirRelatorio',
+          },
+        ],
+      },
+    },
+  },
+}
